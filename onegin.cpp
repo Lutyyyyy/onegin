@@ -24,7 +24,7 @@ int main()
     char strings[Number_of_strings][String_size] = {};
 
     int nStrings = 0;
-    for (nStrings; nStrings < Number_of_strings; nStrings++)
+    for ( ; nStrings < Number_of_strings; nStrings++)
         {
         char* line = Get_string (strings[nStrings], String_size - 1, Onegin);
         if (line == NULL)
@@ -99,16 +99,14 @@ void Speaker_cleaning (char* str)
     if (!(str[Speaker_name_len] == '.' && str[Speaker_name_len + 1] == ' '))
         return;
 
-    char c_str[String_size] = "";
-
-    int i = 0;
-    for (i = Speaker_name_len + 2; str[i] != '\0'; i++)
+    int i = Speaker_name_len + 2;
+    while (str[i] != '\0')
         {
-        c_str[i - Speaker_name_len - 2] = str[i];
+        str[i - Speaker_name_len - 2] = str[i];
+        i++;
         }
 
-    c_str[i - Speaker_name_len - 2] = '\0';
-    strcpy (str, c_str);
+    str[i - Speaker_name_len - 2] = '\0';
     }
 
 
