@@ -2,9 +2,9 @@
 #include <string.h>
 
 
-const int String_size = 1000;
+const int String_size       = 1000;
 const int Number_of_strings = 1000;
-
+const int Speaker_name_len  = 3;
 
 
 //-----------------------------------------------------------------------------
@@ -50,7 +50,7 @@ int main()
 //-----------------------------------------------------------------------------
 
 char* Get_string (char* str, size_t size, FILE* file)
-{
+    {
     char* NULL_check = fgets (str, size - 1, file);
     if (NULL_check == NULL)
         return NULL;
@@ -60,60 +60,56 @@ char* Get_string (char* str, size_t size, FILE* file)
         *eol = '\0';
 
     return str;
-}
+    }
 
 //-----------------------------------------------------------------------------
 
 void Space_cleaning (char* str)
-{
+    {
     int space_counter = 0;
-    while(str[space_counter] == ' ' || str[space_counter] == '\t')
+    while (str[space_counter] == ' ' || str[space_counter] == '\t')
         space_counter++;
 
-    char c_str[String_size] = "";
     int i = 0;
-    while (str[i + space_counter] != '\0')
+    while (str[space_counter + i] != '\0')
         {
-        c_str[i] = str[i + space_counter];
+        str[i] = str[space_counter + i];
         i++;
         }
-    c_str[i] = '\0';
-    strcpy (str, c_str);
-}
+
+    str[i] = '\0';
+    }
 
 //-----------------------------------------------------------------------------
 
 void End_of_line_cleaning (char* str)
-{
+    {
     int symbols_counter = strlen(str) - 1;
     while(str[symbols_counter] == ' ' || str[symbols_counter] == ',' || str[symbols_counter] == '.' || str[symbols_counter] == '\t'
        || str[symbols_counter] == '!' || str[symbols_counter] == '?' || str[symbols_counter] == ':' || str[symbols_counter] == ';')
         symbols_counter--;
 
     str[symbols_counter + 1] = '\0';
-}
+    }
 
 //-----------------------------------------------------------------------------
 
-
 void Speaker_cleaning (char* str)
-{
-    if (str[3] == '.' && str[4] == ' ')
+    {
+    if (!(str[Speaker_name_len] == '.' && str[Speaker_name_len + 1] == ' '))
+        return;
+
+    char c_str[String_size] = "";
+
+    int i = 0;
+    for (i = Speaker_name_len + 2; str[i] != '\0'; i++)
         {
-        char c_str[String_size] = "";
-        int i;
-        for (i = 5; str[i] != '\0'; i++)
-            {
-            c_str[i - 5] = str[i];
-            }
-        c_str[i - 5] = '\0';
-        strcpy (str, c_str);
+        c_str[i - Speaker_name_len - 2] = str[i];
         }
-}
 
-
-
-
+    c_str[i - Speaker_name_len - 2] = '\0';
+    strcpy (str, c_str);
+    }
 
 
 
