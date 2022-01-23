@@ -21,11 +21,9 @@ void swap (char* array[], int i, int j);
 //-----------------------------------------------------------------------------
 
 
-int main(int argc, char* argv[])
+int main()
     {
-    printf("argc = %d   argv[0] = %s    argv[1] = %s\n", argc, argv[0], argv[1]);
-
-    FILE* Onegin = fopen ((argc == 1) ? "hamlet.txt" : argv[1], "r");
+    FILE* Onegin = fopen ("hamlet.txt", "r");
 
     char strings[Number_of_strings][String_size] = {};
     char* string_pointers[Number_of_strings] = {};
@@ -63,10 +61,6 @@ int main(int argc, char* argv[])
 
 
     fclose (Onegin);
-
-
-    getchar();
-
     return 0;
     }
 
