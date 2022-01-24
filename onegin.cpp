@@ -4,18 +4,37 @@
 #include <ctype.h>
 
 
-const int String_size       = 1000;
-const int Number_of_strings = 1000;
-const int Speaker_name_len  = 3;
+const int String_size          = 1000;
+const int Number_of_strings    = 100;
+const int Speaker_name_len     = 3;
+const char* bad_symbols_string = " ,.\t!?:;";
 
 
 //-----------------------------------------------------------------------------
 
 char* Get_string (char* str, size_t String_size, FILE* file);
+
+
+void start_bubblesort(char* array[], int len);
+
+int  skip_bad_start (const char* str);
+int  start_ignoring_cmp (const char* str1, const char* str2);
+
+
+void end_bubblesort(char* array[], int len);
+
+int  skip_bad_end (const char* str, int len);
+int  reverse_stricmp (const char* str1, int len_1,
+                      const char* str2, int len_2);
+int  end_ignoring_cmp (char* str1, int len1,
+                       char* str2, int len2);
+
+
 void Space_cleaning (char* str);
 void End_of_line_cleaning (char* str);
 void Speaker_cleaning (char* str);
-void bubblesort(char* array[], int len);
+
+
 void swap (char* array[], int i, int j);
 
 //-----------------------------------------------------------------------------
@@ -37,9 +56,9 @@ int main(int argc, char* argv[])
         if (line == NULL)
             break;
 
-        Space_cleaning (line);
-        End_of_line_cleaning (line);
-        Speaker_cleaning (line);
+        //Space_cleaning (line);
+        //End_of_line_cleaning (line);
+        //Speaker_cleaning (line);
         }
 
     for (int i = 0; i < nStrings; i++)
@@ -52,7 +71,7 @@ int main(int argc, char* argv[])
 
     printf("\n\n\n");
 
-    bubblesort (string_pointers, nStrings);
+    end_bubblesort (string_pointers, nStrings);
 
     for (int i = 0; i < nStrings; i++)
         {
@@ -84,6 +103,118 @@ char* Get_string (char* str, size_t size, FILE* file)
         *eol = '\0';
 
     return str;
+    }
+
+//-----------------------------------------------------------------------------
+
+void start_bubblesort (char* array[], int len)
+    {
+    int swaps = 1;
+    while (swaps != 0)
+        {
+        swaps = 0;
+
+        for(int i = 0; i < len - 1; i++)
+            {
+            assert (0 <= i && i < len - 1);
+            assert (0 <= i + 1 && i + 1 < len);
+
+            if (start_ignoring_cmp (array[i], array[i + 1]) > 0)
+                {
+                swap (array, i, i + 1);
+                swaps++;
+                }
+            }
+        }
+    }
+
+//-----------------------------------------------------------------------------
+
+int start_ignoring_cmp (const char* str1, const char* str2)
+    {
+    return (stricmp (str1 + skip_bad_start (str1), str2 + skip_bad_start (str2)));
+    }
+
+//-----------------------------------------------------------------------------
+
+int skip_bad_start (const char* str)
+    {
+    int space_counter = 0, str_start = 0;
+    int read = Speaker_name_len + 2;
+
+    while (str[space_counter] == ' ')
+        space_counter++;
+    str_start = space_counter;
+
+    if (str[str_start + Speaker_name_len] == '.' && str[str_start + Speaker_name_len + 1] == ' ')
+        str_start += read;
+
+    return (str_start);
+    }
+
+//-----------------------------------------------------------------------------
+
+void end_bubblesort (char* array[], int len)
+    {
+    int swaps = 1;
+    while (swaps != 0)
+        {
+        swaps = 0;
+
+        for(int i = 0; i < len - 1; i++)
+            {
+            assert (0 <= i && i < len - 1);
+            assert (0 <= i + 1 && i + 1 < len);
+
+            if (end_ignoring_cmp (array[i],     strlen (array[i]),
+                                  array[i + 1], strlen (array[i + 1])) > 0)
+                {
+                swap (array, i, i + 1);
+                swaps++;
+                }
+            }
+        }
+    }
+
+//-----------------------------------------------------------------------------
+
+int end_ignoring_cmp (char* str1, int len1,
+                      char* str2, int len2)
+    {
+    return (reverse_stricmp (str1, len1 - skip_bad_end (str1, len1),
+                             str2, len2 - skip_bad_end (str2, len2)));
+    }
+
+//-----------------------------------------------------------------------------
+
+int skip_bad_end (const char* str, int len)
+    {
+    int symbols_counter = len - 1;
+    while (strchr(bad_symbols_string, str[symbols_counter]))
+        symbols_counter--;
+    return symbols_counter;
+    }
+
+//-----------------------------------------------------------------------------
+
+int reverse_stricmp (const char* str1, int len_1,
+                     const char* str2, int len_2)
+    {
+    assert (str1 != NULL);
+    assert (str2 != NULL);
+
+    int i_1 = len_1 - 1, i_2 = len_2 - 1;
+
+    while (i_1 >= 0 && i_2 >= 0 && tolower(str1[i_1]) == tolower(str2[i_2]));
+        {
+        if (i_1 == 0 || i_2 == 0)
+            return (tolower(str1[i_1]) - tolower(str2[i_2]));
+
+        i_1--;
+        i_2--;
+        }
+
+    return (tolower(str1[i_1]) - tolower(str2[i_2]));
     }
 
 //-----------------------------------------------------------------------------
@@ -133,29 +264,6 @@ void Speaker_cleaning (char* str)
 
 //-----------------------------------------------------------------------------
 
-void bubblesort(char* array[], int len)
-    {
-    int swaps = 1;
-    while (swaps != 0)
-        {
-        swaps = 0;
-
-        for(int i = 0; i < len - 1; i++)
-            {
-            assert (0 <= i && i < len - 1);
-            assert (0 <= i + 1 && i + 1 < len);
-
-            if (stricmp ((array[i]), (array[i + 1])) > 0)
-                {
-                swap (array, i, i + 1);
-                swaps++;
-                }
-            }
-        }
-    }
-
-//-----------------------------------------------------------------------------
-
 void swap (char* array[], int i, int j)
     {
     char* temp = array[i];
@@ -164,9 +272,6 @@ void swap (char* array[], int i, int j)
     }
 
 //-----------------------------------------------------------------------------
-
-
-
 
 
 
