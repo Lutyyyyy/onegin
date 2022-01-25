@@ -2,17 +2,18 @@
 #include <string.h>
 #include <assert.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 
-const int String_size          = 1000;
-const int Number_of_strings    = 50;
-const int Speaker_name_len     = 3;
-const char* bad_symbols_string = " ,.\t!?:;";
+const int   String_size          = 1000;
+const int   Number_of_strings    = 10;
+const int   Speaker_name_len     = 3;
+const char* bad_symbols_string   = " ,.\t!?:;";
 
 
 struct line
 {
-    char string[String_size];
+    char* string;
     int len;
 };
 
@@ -21,25 +22,27 @@ struct line
 
 char* Get_string (char* str, size_t String_size, FILE* file);
 
-void bubblesort (const char* array[], int len, int (*cmp) (const char*, const char*));
+void bubblesort (struct line array[], int len, int (*cmp_function) (const struct line structure1, const struct line structure2));
 
 
-int  skip_bad_start (const char* str);
-int  start_ignoring_cmp (const char* str1, const char* str2);
+int  skip_bad_start (const struct line structure);
+int  start_ignoring_cmp (const struct line structure1, const struct line structure2);
 
 
-int  skip_bad_end (const char* str, int len);
-int  reverse_stricmp (const char* str1, int len_1,
-                      const char* str2, int len_2);
-int  end_ignoring_cmp (const char* str1, const char* str2);
+int  skip_bad_end (const struct line structure);
+int  reverse_stricmp (const struct line structure1, const struct line structure2);
+int  end_ignoring_cmp (const struct line structure1, const struct line structure2);
 
 
-void Space_cleaning (char* str);
-void End_of_line_cleaning (char* str);
-void Speaker_cleaning (char* str);
+void Space_cleaning (struct line structure);
+void End_of_line_cleaning (struct line structure);
+void Speaker_cleaning (struct line structure);
 
 
-void swap (const char* array[], int i, int j);
+void generate_poem (const struct line array[], int number_of_strings, int number_of_quatrains);
+
+
+void swap (struct line array[], int i, int j);
 
 //-----------------------------------------------------------------------------
 
@@ -48,42 +51,48 @@ int main(int argc, char* argv[])
     {
     printf("argc = %d   argv[0] = %s    argv[1] = %s\n", argc, argv[0], argv[1]);
 
-    FILE* Onegin = fopen ((argc == 1) ? "hamlet.txt" : argv[1], "r");
+    FILE* Onegin = fopen ((argc == 1) ? "iluxa.txt" : argv[1], "r");
 
-    static struct line lines[Number_of_strings] = {};
-    const char* line_pointers[Number_of_strings] = {};
 
-    //static char strings[Number_of_strings][String_size] = {};
-    //const char* string_pointers[Number_of_strings] = {};
+    static char strings[Number_of_strings][String_size] = {};
+    struct line lines  [Number_of_strings] = {};
+
 
     int nStrings = 0;
     for ( ; nStrings < Number_of_strings; nStrings++)
         {
-        char* line = Get_string ((lines[nStrings]).string, String_size - 1, Onegin);
+        char* line = Get_string (strings[nStrings], String_size - 1, Onegin);
         if (line == NULL)
             break;
-        (lines[nStrings]).len = strlen(line);
         }
 
     for (int i = 0; i < nStrings; i++)
-        line_pointers[i] = (lines[i]).string;
+        {
+        lines[i].string = strings[i];
+        lines[i].len    = strlen (strings[i]);
+        }
+
 
     for (int i = 0; i < nStrings; i++)
-        printf("String #[%d] = (%s)\n", i, (lines[i]).string);
+        printf("String #[%4d]: len = %3d,\t(%s)\n", i, lines[i].len, lines[i].string);
 
     printf("\n\n\n");
 
 
-    bubblesort (line_pointers, nStrings, *(0 ? start_ignoring_cmp : end_ignoring_cmp));
-
+    bubblesort (lines, nStrings, 0 ?  start_ignoring_cmp :  end_ignoring_cmp);
+//  bubblesort (lines, nStrings, 0 ? &start_ignoring_cmp : &end_ignoring_cmp);
 
     for (int i = 0; i < nStrings; i++)
-        printf("String #[%d] = (%s)\n", i, line_pointers[i]);
+        printf("Sorted #[%4d]: len = %3d,\t(%s)\n", i, lines[i].len, lines[i].string);
+
+
+//    generate_poem (lines, Number_of_strings, 10);
+
 
     fclose (Onegin);
 
 
-    getchar();
+//    getchar();
 
     return 0;
     }
@@ -106,47 +115,67 @@ char* Get_string (char* str, size_t size, FILE* file)
 
 //-----------------------------------------------------------------------------
 
-void bubblesort (const char* array[], int len, int (*cmp) (const char*, const char*))
+void bubblesort (struct line array[], int array_len, int (*cmp_function) (const struct line structure1, const struct line structure2))
     {
+
+//    printf ("SORT START:\n");
+//    for(int i = 0; i < array_len; i++)
+//        printf("String #[%d] = (%s)\n", i, array[i]);
+//    printf ("\n");
+
     int swaps = 1;
     while (swaps != 0)
         {
         swaps = 0;
 
-        for(int i = 0; i < len - 1; i++)
+        for(int i = 0; i < array_len - 1; i++)
             {
-            assert (0 <= i && i < len - 1);
-            assert (0 <= i + 1 && i + 1 < len);
+            assert (0 <= i && i < array_len - 1);
+            assert (0 <= i + 1 && i + 1 < array_len);
 
-            int res = (*cmp) (array[i], array[i + 1]);
+//            printf ("i = %d: end_ignoring_cmp ('%s', '%s')...\n", i, array[i].string, array[i + 1].string);
+
+            int res =   cmp_function  (array[i], array[i + 1]);
+//          int res = (*cmp_function) (array[i], array[i + 1]);
+
+//            printf ("i = %d: end_ignoring_cmp ('%s', '%s')... GOT %d\n", i, array[i].string, array[i + 1].string, res);
+
             if (res > 0)
                 {
                 swap (array, i, i + 1);
                 swaps++;
+
+//                printf ("... SWAPPED\n");
                 }
+//            printf ("\n\n");
             }
+        for(int i = 0; i < array_len; i++) printf("String #[%d] = (%s)\n", i, array[i].string);
+//        printf ("\n");
         }
+
+//    printf ("...SORT END\n\n");
     }
 
 //-----------------------------------------------------------------------------
 
-int start_ignoring_cmp (const char* str1, const char* str2)
+int start_ignoring_cmp (const struct line structure1, const struct line structure2)
     {
-    return (stricmp (str1 + skip_bad_start (str1), str2 + skip_bad_start (str2)));
+    return (stricmp ((char*) structure1.string + skip_bad_start (structure1),
+                     (char*) structure2.string + skip_bad_start (structure2)));
     }
 
 //-----------------------------------------------------------------------------
 
-int skip_bad_start (const char* str)
+int skip_bad_start (const struct line structure)
     {
     int space_counter = 0, str_start = 0;
     int read = Speaker_name_len + 2;
 
-    while (str[space_counter] == ' ')
+    while (structure.string[space_counter] == ' ')
         space_counter++;
     str_start = space_counter;
 
-    if (str[str_start + Speaker_name_len] == '.' && str[str_start + Speaker_name_len + 1] == ' ')
+    if (structure.string[str_start + Speaker_name_len] == '.' && structure.string[str_start + Speaker_name_len + 1] == ' ')
         str_start += read;
 
     return (str_start);
@@ -154,21 +183,20 @@ int skip_bad_start (const char* str)
 
 //-----------------------------------------------------------------------------
 
-int end_ignoring_cmp (const char* str1, const char* str2)
+int end_ignoring_cmp (const struct line structure1, const struct line structure2)
     {
-    return (reverse_stricmp (str1, skip_bad_end (str1, strlen(str1)),
-                                 str2, skip_bad_end (str2, strlen(str2))));
+    return (reverse_stricmp (structure1, structure2));
     }
 
 //-----------------------------------------------------------------------------
 
-int skip_bad_end (const char* str, int len)
+int skip_bad_end (const struct line structure)
     {
-    if (len == 0)
+    if (structure.len == 0)
         return 0;
 
-    int symbols_counter = len;
-    while (strchr(bad_symbols_string, str[symbols_counter]))
+    int symbols_counter = structure.len;
+    while (strchr(bad_symbols_string, structure.string[symbols_counter]))
         symbols_counter--;
 
     return symbols_counter;
@@ -176,34 +204,117 @@ int skip_bad_end (const char* str, int len)
 
 //-----------------------------------------------------------------------------
 
-int reverse_stricmp (const char* str1, int len_1,
-                     const char* str2, int len_2)
+int reverse_stricmp (const struct line structure1, const struct line structure2)
     {
-    assert (str1 != NULL);
-    assert (str2 != NULL);
+    fprintf(stderr, "\nALLO\n");
 
-    int i_1 = len_1, i_2 = len_2;
-    while (i_1 >= 0 && i_2 >= 0 && tolower(str1[i_1]) == tolower(str2[i_2]))
+    assert (structure1.string != NULL);
+    assert (structure2.string != NULL);
+
+    int i_1 = structure1.len, i_2 = structure2.len;
+    if (i_1 > 0) i_1 -= 1;
+    if (i_2 > 0) i_2 -= 1;
+
+    fprintf (stderr, ">>> i_1 = %d, i_2 = %d, str1[] = '%c', str2[] = '%c'\n", i_1, i_2,
+             structure1.string[i_1], structure2.string[i_2]);
+
+
+    while (i_1 >= 0 && i_2 >= 0 && tolower(structure1.string[i_1]) == tolower(structure2.string[i_2]))
         {
+        fprintf (stderr, "!!! i_1 = %d, i_2 = %d, str1[] = '%c', str2[] = '%c'\n",
+                 i_1, i_2, structure1.string[i_1], structure2.string[i_2]);
+
         if (i_1 == 0 || i_2 == 0)
-            return (tolower(str1[i_1]) - tolower(str2[i_2]));
+            break;
 
         i_1--;
         i_2--;
         }
 
-    return (tolower(str1[i_1]) - tolower(str2[i_2]));
+    fprintf (stderr, "<<< i_1 = %d, i_2 = %d, str1[] = '%c', str2[] = '%c'\n",
+             i_1, i_2, structure1.string[i_1], structure2.string[i_2]);
+
+    fprintf(stderr, "MENYA SLIWNO?\n\n");
+
+    return (tolower(structure1.string[i_1]) - tolower(structure2.string[i_2]));
     }
+
 //-----------------------------------------------------------------------------
 
-void swap (const char* array[], int i, int j)
+void Space_cleaning (struct line structure)
     {
-    const char* temp = array[i];
+    int space_counter = 0;
+    while (structure.string[space_counter] == ' ' || structure.string[space_counter] == '\t')
+        space_counter++;
+
+    int i = 0;
+    while (structure.string[space_counter + i] != '\0')
+        {
+        structure.string[i] = structure.string[space_counter + i];
+        i++;
+        }
+
+    structure.string[i] = '\0';
+    }
+
+//-----------------------------------------------------------------------------
+
+void End_of_line_cleaning (struct line structure)
+    {
+    int symbols_counter = structure.len - 1;
+    while(structure.string[symbols_counter] == ' ' || structure.string[symbols_counter] == ',' || structure.string[symbols_counter] == '.' || structure.string[symbols_counter] == '\t'
+       || structure.string[symbols_counter] == '!' || structure.string[symbols_counter] == '?' || structure.string[symbols_counter] == ':' || structure.string[symbols_counter] == ';')
+        symbols_counter--;
+
+    structure.string[symbols_counter + 1] = '\0';
+    }
+
+//-----------------------------------------------------------------------------
+
+void Speaker_cleaning (struct line structure)
+    {
+    if (!(structure.string[Speaker_name_len] == '.' && structure.string[Speaker_name_len + 1] == ' '))
+        return;
+
+    int read = Speaker_name_len + 2;
+    int write = 0;
+    while (structure.string[read] != '\0')
+        structure.string[write++] = structure.string[read++];
+
+    structure.string[write] = '\0';
+    }
+
+//-----------------------------------------------------------------------------
+
+void swap (struct line array[], int i, int j)
+    {
+    struct line temp = array[i];
     array[i] = array[j];
     array[j] = temp;
     }
 
 
+//-----------------------------------------------------------------------------
+
+void generate_poem (const struct line array[], int number_of_strings, int number_of_quatrains)
+    {
+    for (int j = 0; j < number_of_quatrains; j++)
+        {
+        int number_of_line = rand() % (number_of_strings - 4);
+
+        for (int i = 0; i < 4; i++)
+            {
+            while (array[number_of_line].len < 2)
+                number_of_line = rand() % (number_of_strings - 4);
+
+            Space_cleaning (array[number_of_line + i]);
+            printf("%s\n", array[number_of_line + i].string);
+            }
+        printf ("\n");
+        }
+
+    printf("\n@Ilya Mirkis feat. Shakespeare\n");
+    }
 
 
 
