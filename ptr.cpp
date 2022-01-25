@@ -5,9 +5,16 @@
 
 
 const int String_size          = 1000;
-const int Number_of_strings    = 5000;
+const int Number_of_strings    = 50;
 const int Speaker_name_len     = 3;
 const char* bad_symbols_string = " ,.\t!?:;";
+
+
+struct line
+{
+    char string[String_size];
+    int len;
+};
 
 
 //-----------------------------------------------------------------------------
@@ -43,36 +50,35 @@ int main(int argc, char* argv[])
 
     FILE* Onegin = fopen ((argc == 1) ? "hamlet.txt" : argv[1], "r");
 
-    static char strings[Number_of_strings][String_size] = {};
-    const char* string_pointers[Number_of_strings] = {};
+    static struct line lines[Number_of_strings] = {};
+    const char* line_pointers[Number_of_strings] = {};
+
+    //static char strings[Number_of_strings][String_size] = {};
+    //const char* string_pointers[Number_of_strings] = {};
 
     int nStrings = 0;
     for ( ; nStrings < Number_of_strings; nStrings++)
         {
-        char* line = Get_string (strings[nStrings], String_size - 1, Onegin);
+        char* line = Get_string ((lines[nStrings]).string, String_size - 1, Onegin);
         if (line == NULL)
             break;
+        (lines[nStrings]).len = strlen(line);
         }
 
     for (int i = 0; i < nStrings; i++)
-        string_pointers[i] = (char*) &strings[i];
+        line_pointers[i] = (lines[i]).string;
 
     for (int i = 0; i < nStrings; i++)
-        printf("String #[%d] = (%s)\n", i, string_pointers[i]);
+        printf("String #[%d] = (%s)\n", i, (lines[i]).string);
 
     printf("\n\n\n");
 
 
-    bubblesort (string_pointers, nStrings,
-                *(1 ? start_ignoring_cmp : end_ignoring_cmp));
-
-
-
-
+    bubblesort (line_pointers, nStrings, *(0 ? start_ignoring_cmp : end_ignoring_cmp));
 
 
     for (int i = 0; i < nStrings; i++)
-        printf("String #[%d] = (%s)\n", i, string_pointers[i]);
+        printf("String #[%d] = (%s)\n", i, line_pointers[i]);
 
     fclose (Onegin);
 
@@ -96,6 +102,30 @@ char* Get_string (char* str, size_t size, FILE* file)
         *eol = '\0';
 
     return str;
+    }
+
+//-----------------------------------------------------------------------------
+
+void bubblesort (const char* array[], int len, int (*cmp) (const char*, const char*))
+    {
+    int swaps = 1;
+    while (swaps != 0)
+        {
+        swaps = 0;
+
+        for(int i = 0; i < len - 1; i++)
+            {
+            assert (0 <= i && i < len - 1);
+            assert (0 <= i + 1 && i + 1 < len);
+
+            int res = (*cmp) (array[i], array[i + 1]);
+            if (res > 0)
+                {
+                swap (array, i, i + 1);
+                swaps++;
+                }
+            }
+        }
     }
 
 //-----------------------------------------------------------------------------
@@ -173,36 +203,6 @@ void swap (const char* array[], int i, int j)
     array[j] = temp;
     }
 
-//-----------------------------------------------------------------------------
-
-
-
-
-
-
-void bubblesort (const char* array[], int len, int (*cmp) (const char*, const char*))
-    {
-    int swaps = 1;
-    while (swaps != 0)
-        {
-        swaps = 0;
-
-        for(int i = 0; i < len - 1; i++)
-            {
-            assert (0 <= i && i < len - 1);
-            assert (0 <= i + 1 && i + 1 < len);
-
-            int res = (*cmp) (array[i], array[i + 1]);
-            if (res > 0)
-                {
-                swap (array, i, i + 1);
-                swaps++;
-                }
-            }
-        }
-    }
-
-//-----------------------------------------------------------------------------
 
 
 
