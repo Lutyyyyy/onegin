@@ -6,7 +6,7 @@
 
 
 const int   String_size          = 1000;
-const int   Number_of_strings    = 10;
+const int   Number_of_strings    = 4000;
 const int   Speaker_name_len     = 3;
 const char* bad_symbols_string   = " ,.\t!?:;";
 
@@ -30,7 +30,8 @@ int  start_ignoring_cmp (const struct line structure1, const struct line structu
 
 
 int  skip_bad_end (const struct line structure);
-int  reverse_stricmp (const struct line structure1, const struct line structure2);
+int reverse_stricmp (const char* str1, int len_1,
+                     const char* str2, int len_2);
 int  end_ignoring_cmp (const struct line structure1, const struct line structure2);
 
 
@@ -51,7 +52,7 @@ int main(int argc, char* argv[])
     {
     printf("argc = %d   argv[0] = %s    argv[1] = %s\n", argc, argv[0], argv[1]);
 
-    FILE* Onegin = fopen ((argc == 1) ? "iluxa.txt" : argv[1], "r");
+    FILE* Onegin = fopen ((argc == 1) ? "hamlet.txt" : argv[1], "r");
 
 
     static char strings[Number_of_strings][String_size] = {};
@@ -86,7 +87,7 @@ int main(int argc, char* argv[])
         printf("Sorted #[%4d]: len = %3d,\t(%s)\n", i, lines[i].len, lines[i].string);
 
 
-//    generate_poem (lines, Number_of_strings, 10);
+    generate_poem (lines, Number_of_strings, 10);
 
 
     fclose (Onegin);
@@ -149,7 +150,7 @@ void bubblesort (struct line array[], int array_len, int (*cmp_function) (const 
                 }
 //            printf ("\n\n");
             }
-        for(int i = 0; i < array_len; i++) printf("String #[%d] = (%s)\n", i, array[i].string);
+//        for(int i = 0; i < array_len; i++) printf("String #[%d] = (%s)\n", i, array[i].string);
 //        printf ("\n");
         }
 
@@ -185,7 +186,8 @@ int skip_bad_start (const struct line structure)
 
 int end_ignoring_cmp (const struct line structure1, const struct line structure2)
     {
-    return (reverse_stricmp (structure1, structure2));
+    return (reverse_stricmp (structure1.string, skip_bad_end (structure1),
+                             structure2.string, skip_bad_end (structure2)));
     }
 
 //-----------------------------------------------------------------------------
@@ -204,39 +206,23 @@ int skip_bad_end (const struct line structure)
 
 //-----------------------------------------------------------------------------
 
-int reverse_stricmp (const struct line structure1, const struct line structure2)
+int reverse_stricmp (const char* str1, int len_1,
+                     const char* str2, int len_2)
     {
-    fprintf(stderr, "\nALLO\n");
+    assert (str1 != NULL);
+    assert (str2 != NULL);
 
-    assert (structure1.string != NULL);
-    assert (structure2.string != NULL);
-
-    int i_1 = structure1.len, i_2 = structure2.len;
-    if (i_1 > 0) i_1 -= 1;
-    if (i_2 > 0) i_2 -= 1;
-
-    fprintf (stderr, ">>> i_1 = %d, i_2 = %d, str1[] = '%c', str2[] = '%c'\n", i_1, i_2,
-             structure1.string[i_1], structure2.string[i_2]);
-
-
-    while (i_1 >= 0 && i_2 >= 0 && tolower(structure1.string[i_1]) == tolower(structure2.string[i_2]))
+    int i_1 = len_1, i_2 = len_2;
+    while (i_1 >= 0 && i_2 >= 0 && tolower(str1[i_1]) == tolower(str2[i_2]))
         {
-        fprintf (stderr, "!!! i_1 = %d, i_2 = %d, str1[] = '%c', str2[] = '%c'\n",
-                 i_1, i_2, structure1.string[i_1], structure2.string[i_2]);
-
         if (i_1 == 0 || i_2 == 0)
-            break;
+            return (tolower(str1[i_1]) - tolower(str2[i_2]));
 
         i_1--;
         i_2--;
         }
 
-    fprintf (stderr, "<<< i_1 = %d, i_2 = %d, str1[] = '%c', str2[] = '%c'\n",
-             i_1, i_2, structure1.string[i_1], structure2.string[i_2]);
-
-    fprintf(stderr, "MENYA SLIWNO?\n\n");
-
-    return (tolower(structure1.string[i_1]) - tolower(structure2.string[i_2]));
+    return (tolower(str1[i_1]) - tolower(str2[i_2]));
     }
 
 //-----------------------------------------------------------------------------
