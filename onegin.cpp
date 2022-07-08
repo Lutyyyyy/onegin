@@ -6,7 +6,7 @@
 
 
 const int   String_size          = 1000;
-const int   Number_of_strings    = 5000;
+const int   Number_of_strings    = 100;
 const int   Speaker_name_len     = 3;
 const char* bad_symbols_string   = " ,.\t!?:;";
 
@@ -20,30 +20,29 @@ struct line
 
 //-----------------------------------------------------------------------------
 
-char* Get_string (char* str, size_t String_size, FILE* file);
+char*   Get_string           (char* str, size_t String_size, FILE* file);
 
-void bubblesort (struct line array[], int len, int (*cmp_function) (const struct line structure1, const struct line structure2));
-
-
-int  skip_bad_start (const struct line structure);
-int  start_ignoring_cmp (const struct line structure1, const struct line structure2);
+void    bubblesort           (struct line array[], int len, int (*cmp_function) (const struct line structure1, const struct line structure2));
 
 
-int  skip_bad_end (const struct line structure);
-int reverse_stricmp (const char* str1, int len_1,
-                     const char* str2, int len_2);
-int  end_ignoring_cmp (const struct line structure1, const struct line structure2);
+int     skip_bad_start       (const struct line structure);
+int     start_ignoring_cmp   (const struct line structure1, const struct line structure2);
 
 
-void Space_cleaning (struct line structure);
-void End_of_line_cleaning (struct line structure);
-void Speaker_cleaning (struct line structure);
+int     skip_bad_end         (const struct line structure);
+int     reverse_stricmp      (const char* str1, int len_1, const char* str2, int len_2);
+int     end_ignoring_cmp     (const struct line structure1, const struct line structure2);
 
 
-void generate_poem (const struct line array[], int number_of_strings, int number_of_quatrains);
+void    Space_cleaning       (struct line structure);
+void    End_of_line_cleaning (struct line structure);
+void    Speaker_cleaning     (struct line structure);
 
 
-void swap (struct line array[], int i, int j);
+void    generate_poem        (const struct line array[], int number_of_strings, int number_of_quatrains);
+
+
+void    swap                 (struct line array[], int i, int j);
 
 //-----------------------------------------------------------------------------
 
@@ -53,7 +52,6 @@ int main(int argc, char* argv[])
     printf("argc = %d   argv[0] = %s    argv[1] = %s\n", argc, argv[0], argv[1]);
 
     FILE* Onegin = fopen ((argc == 1) ? "hamlet.txt" : argv[1], "r");
-
 
     static char strings[Number_of_strings][String_size] = {};
     struct line lines  [Number_of_strings] = {};
