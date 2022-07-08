@@ -4,38 +4,38 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-typedef struct line_ {
-    char* str;
+struct line
+{
+    char* string;
     int len;
-} line;
-
-typedef struct Line_array_ {
-    line* arr;
-    size_t len;
-} Line_array;
-
+};
 
 int buf_size = 1000;
 const char* bad_symbols_string   = " ,.\t!?:;";
-Line_array* parse_file (FILE* file);
-
+char** parse_file (FILE* file);
 
 int main()
 {
     FILE* file = fopen("test.txt", "r");
 
-    Line_array* arr = parse_file (file);
-    printf ("%s\n", arr->arr[0].str);
+    char** arr = parse_file (file);
+    printf ("%s\n", arr[0]);
+    free(arr[0]);
+    free(arr);
+    
     fclose(file);
-
-/*    for (int i = 0; i < 1; i++)
+/*
+    for (int i = 0; i < 4459; i++)
+    {
+        printf ("%s\n", arr[i]);
         free(arr[i]);
+    }
     free(arr);
 */
     return 0;
 }
 
-Line_array* parse_file (FILE* file)
+char** parse_file (FILE* file)
 {
     if (file == nullptr)
     {
@@ -68,39 +68,28 @@ Line_array* parse_file (FILE* file)
 
 //  creating array of strings
 
-    Line_array* str_arr = (Line_array*) calloc (str_counter + 1, sizeof (Line_array));
-
+    char** str_arr = (char**) calloc (str_counter + 1, sizeof (char*));
+/*
     if (str_counter == 0)
     {
         size_t len = strlen (text_of_file);
-        line* term   = (line*) calloc (1,       sizeof (line));
-        char* string = (char*) calloc (len + 1, sizeof (char));
-        strcpy (string, (char*) text_of_file);
-        
-        term->str = string;
-        term->len = len;
-        str_arr->arr[0] = *term;
-        str_arr->len = 1;
-
-        free (text_of_file);
-        return str_arr;    
+        char* term = (char*) calloc (len + 1, sizeof (char));
+        strcpy (term, (char*) text_of_file);
+        str_arr[0] = term;
     }
-
+*/
     long int ptr = 0;
     size_t j = 0;
     
-    for ( ; j < str_counter; j++)
+    for ( ; j == 0 || j < str_counter; j++)
     {
         size_t len = strlen ((char*) text_of_file + ptr);
-        line* term   = (line*) calloc (1,       sizeof (line));
-        char* string = (char*) calloc (len + 1, sizeof (char));
-        strcpy (string, (char*) text_of_file + ptr);
-        term->str = string;
-        term->len = len;
-        str_arr->arr[j] = *term;
+        char* term = (char*) calloc (len + 1, sizeof (char));
+        strcpy (term, (char*) text_of_file + ptr);
+        str_arr[j] = term;
         ptr = ptr + len + 1;
     }
-    str_arr->len = str_counter + 1;
+
     free (text_of_file);
     return str_arr;
 }
