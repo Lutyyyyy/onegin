@@ -4,38 +4,39 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-struct line
+typedef struct line_
 {
     char* string;
     int len;
-};
+} line;
 
-int buf_size = 1000;
-const char* bad_symbols_string   = " ,.\t!?:;";
-char** parse_file (FILE* file);
+typedef struct line_array_
+{
+    line* arr;
+    size_t size;
+} line_array;
+
+
+//const char* bad_symbols_string   = " ,.\t!?:;";
+
+line_array* parse_file (FILE* file);
+void destruct_line_arr (line_array* array);
 
 int main()
 {
-    FILE* file = fopen("test.txt", "r");
+    FILE* file = fopen("hamlet.txt", "r");
 
-    char** arr = parse_file (file);
-    printf ("%s\n", arr[0]);
-    free(arr[0]);
-    free(arr);
+    line_array* array = parse_file (file);
+    for (int i = 0; i < array->size - 1; i++)
+        printf ("%s\n", array->arr[i].string);
+
+    destruct_line_arr (array);
     
     fclose(file);
-/*
-    for (int i = 0; i < 4459; i++)
-    {
-        printf ("%s\n", arr[i]);
-        free(arr[i]);
-    }
-    free(arr);
-*/
     return 0;
 }
 
-char** parse_file (FILE* file)
+line_array* parse_file (FILE* file)
 {
     if (file == nullptr)
     {
@@ -45,7 +46,7 @@ char** parse_file (FILE* file)
 
 //  finding size of file and number of strings
 
-    fseek (file, 0L, SEEK_END);  // find END 
+    fseek (file, 0L, SEEK_END); // find END 
     long int sz = ftell (file); // bytes from START to END
     fseek (file, 0L, SEEK_SET); // return indicator to START position
 
@@ -68,7 +69,8 @@ char** parse_file (FILE* file)
 
 //  creating array of strings
 
-    char** str_arr = (char**) calloc (str_counter + 1, sizeof (char*));
+    line_array* str_array = (line_array*) calloc (1,               sizeof (line_array));
+    line*       strings   = (line*)       calloc (str_counter + 1, sizeof (line));
 /*
     if (str_counter == 0)
     {
@@ -85,11 +87,24 @@ char** parse_file (FILE* file)
     {
         size_t len = strlen ((char*) text_of_file + ptr);
         char* term = (char*) calloc (len + 1, sizeof (char));
-        strcpy (term, (char*) text_of_file + ptr);
-        str_arr[j] = term;
+        strings[j].string = strcpy (term, (char*) text_of_file + ptr);
+        strings[j].len = len;
+        
         ptr = ptr + len + 1;
     }
+    str_array->arr  = strings;
+    printf ("\n\n%d\n\n", str_counter);
+    str_array->size = str_counter + 1;
 
     free (text_of_file);
-    return str_arr;
+    return str_array;
+}
+
+void destruct_line_arr (line_array* array)
+{
+    for (int i = 0; i < array->size; i++)
+        free (array->arr[i].string);
+    
+    free (array->arr);
+    free (array);
 }
