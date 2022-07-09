@@ -17,38 +17,72 @@ typedef struct line_array_
 } line_array;
 
 
-//const char* bad_symbols_string   = " ,.\t!?:;";
 
-line_array* parse_file (FILE* file);
-void destruct_line_arr (line_array* array);
+line_array* parse_file          (FILE* file);
+void        destruct_line_arr   (line_array* array);
+int         skip_bad_start      (const char* str);
+int         start_comparator    (const line* l1, const line* l2);
+int         skip_bad_end        (char* begin, char* str);
+int         end_comparator      (line l1, line l2);
+void        bubblesort          (line_array* array, int (*cmp_function) (line l1, line l2));
+void        swap                (line_array* array, int i, int j);
+int         my_tolower          (char c);
+
 
 int main()
 {
     FILE* file = fopen("hamlet.txt", "r");
 
     line_array* array = parse_file (file);
-    for (int i = 0; i < array->size - 1; i++)
+//    bubblesort (array, start_comparator);
+    qsort (array->arr, array->size, sizeof (line), start_comparator);
+    for (int i = 0; i < 500; i++)
         printf ("%s\n", array->arr[i].string);
 
     destruct_line_arr (array);
     
     fclose(file);
+
+
+/*
+    const char* s[] = {"", ".qwertyu", "", "rf???"};
+    
+    line l1, l2;
+    l1.string = (char*) s[3];
+    l1.len = strlen(s[3]);
+
+    l2.string = (char*) s[1];
+    l2.len = strlen(s[1]);
+
+    int res = end_comparator(l1, l2);
+
+    printf ("res = %d\n", res);
+*/
+    
+
+    
     return 0;
 }
 
 line_array* parse_file (FILE* file)
 {
+//  check if could open file
+ 
     if (file == nullptr)
     {
         printf ("ERROR: *file == nullptr");
         return NULL;
     }
 
-//  finding size of file and number of strings
+
+//  finding size of file 
 
     fseek (file, 0L, SEEK_END); // find END 
     long int sz = ftell (file); // bytes from START to END
     fseek (file, 0L, SEEK_SET); // return indicator to START position
+
+
+// finding number of strings to calloc 
 
     char* text_of_file = (char*) calloc (sz + 1, sizeof(char));
     long int i = 0;
@@ -64,22 +98,19 @@ line_array* parse_file (FILE* file)
         text_of_file[i] = c;
         i++;
     }
+
     if (getc (file) == EOF)
+    {
         text_of_file[i] = '\0';
+        str_counter++;
+    }
+
 
 //  creating array of strings
 
     line_array* str_array = (line_array*) calloc (1,               sizeof (line_array));
-    line*       strings   = (line*)       calloc (str_counter + 1, sizeof (line));
-/*
-    if (str_counter == 0)
-    {
-        size_t len = strlen (text_of_file);
-        char* term = (char*) calloc (len + 1, sizeof (char));
-        strcpy (term, (char*) text_of_file);
-        str_arr[0] = term;
-    }
-*/
+    line*       strings   = (line*)       calloc (str_counter, sizeof (line));
+
     long int ptr = 0;
     size_t j = 0;
     
@@ -93,8 +124,10 @@ line_array* parse_file (FILE* file)
         ptr = ptr + len + 1;
     }
     str_array->arr  = strings;
-    printf ("\n\n%d\n\n", str_counter);
-    str_array->size = str_counter + 1;
+    str_array->size = str_counter;
+
+
+//  free buffer and return
 
     free (text_of_file);
     return str_array;
@@ -107,4 +140,105 @@ void destruct_line_arr (line_array* array)
     
     free (array->arr);
     free (array);
+}
+
+
+int skip_bad_start (const char* str)
+{
+    int skip = 0;
+    while (strchr (" ,.\t!?:;", *(str + skip)) != NULL && *(str + skip) != '\0')
+        skip++; 
+
+    return skip;
+}
+
+int start_comparator (const void* l1, const void* l2)
+{
+    size_t p1 = 0, p2 = 0;
+
+    p1 += skip_bad_start ((line*) l1->string + p1);
+    p2 += skip_bad_start ((line*) l2->string + p2);
+    
+    while (my_tolower((line*) l1->string[p1]) == my_tolower((line*) l2->string[p2]))
+    {
+        if ((line*) l1->string[p1] == '\0' || (line*) l2->string[p2] == '\0')
+            return (my_tolower((line*) l1->string[p1]) - my_tolower((line*) l2->string[p2] > 0)) ? 1 : -1;
+        
+        p1++;
+        p2++;
+        p1 += skip_bad_start ((line*) l1->string + p1);
+        p2 += skip_bad_start ((line*) l2->string + p2);
+
+    }
+
+    return (my_tolower((line*) l1->string[p1]) - my_tolower((line*) l2->string[p2]) > 0) ? 1 : -1;
+}
+
+int end_comparator (const line* l1, const line* l2)
+{
+    if (l1->len == 0)
+        return -1;
+    
+    if (l2->len == 0 && l1->len != 0)
+        return 1;
+    
+    size_t p1 = l1->len - 1, p2 = l2->len - 1;
+
+    p1 -= skip_bad_end (l1->string, l1->string + p1);
+    p2 -= skip_bad_end (l2->string, l2->string + p2);
+    
+    while (my_tolower(l1->string[p1]) == my_tolower(l2->string[p2]))
+    {
+        if (p1 == 0 && p2 == 0)
+            return (l1->len - l2->len > 0) ? 1 : -1;
+        if ((p1 == 0 && p2 != 0) || (p1 != 0 && p2 == 0))
+            return (my_tolower(l1->string[p1]) - my_tolower(l2->string[p2] > 0)) ? 1 : -1;
+        
+        p1--;
+        p2--;
+        p1 -= skip_bad_end (l1->string, l1->string + p1);
+        p2 -= skip_bad_end (l2->string, l2->string + p2);
+
+    }
+
+    return (my_tolower(l1->string[p1]) - my_tolower(l2->string[p2]) > 0) ? 1 : -1;
+}
+
+int skip_bad_end (char* begin, char* str)
+{
+    int skip = 0;
+    while (strchr (" ,.\t!?:;", *(str - skip)) != NULL && str - skip != begin)
+        skip++; 
+
+    return skip;
+}
+
+void bubblesort (line_array* array, int (*cmp_function) (const line* l1, const line* l2))
+{
+    int swaps = 1;
+    
+    while (swaps != 0)
+    {
+        swaps = 0;
+        for(int i = 0; i < 500; i++)
+        {
+            if (cmp_function (array->arr + i, array->arr + (i + 1)) > 0)
+            {
+                swap (array, i, i+1);
+                swaps++;
+            }
+        }
+    }
+}
+
+void swap (line_array* array, int i, int j)
+{
+    line temp = array->arr[i];
+    array->arr[i] = array->arr[j];
+    array->arr[j] = temp;
+}
+
+int my_tolower (char c)
+{
+    return (65 <= c && c <= 90) ? c + 32 : c;
 }
