@@ -21,12 +21,13 @@ typedef struct line_array_
 line_array* parse_file          (FILE* file);
 void        destruct_line_arr   (line_array* array);
 int         skip_bad_start      (const char* str);
-int         start_comparator    (const line* l1, const line* l2);
+int         start_comparator    (line l1, line l2);
 int         skip_bad_end        (char* begin, char* str);
 int         end_comparator      (line l1, line l2);
 void        bubblesort          (line_array* array, int (*cmp_function) (line l1, line l2));
 void        swap                (line_array* array, int i, int j);
 int         my_tolower          (char c);
+int cmp (const void* a, const void* b);
 
 
 int main()
@@ -35,8 +36,8 @@ int main()
 
     line_array* array = parse_file (file);
 //    bubblesort (array, start_comparator);
-    qsort (array->arr, array->size, sizeof (line), start_comparator);
-    for (int i = 0; i < 500; i++)
+    qsort (array->arr, array->size, sizeof (line), cmp);
+    for (int i = 0; i < array->size; i++)
         printf ("%s\n", array->arr[i].string);
 
     destruct_line_arr (array);
@@ -152,56 +153,56 @@ int skip_bad_start (const char* str)
     return skip;
 }
 
-int start_comparator (const void* l1, const void* l2)
+int start_comparator (line* l1, line* l2)
 {
     size_t p1 = 0, p2 = 0;
 
-    p1 += skip_bad_start ((line*) l1->string + p1);
-    p2 += skip_bad_start ((line*) l2->string + p2);
-    
-    while (my_tolower((line*) l1->string[p1]) == my_tolower((line*) l2->string[p2]))
-    {
-        if ((line*) l1->string[p1] == '\0' || (line*) l2->string[p2] == '\0')
-            return (my_tolower((line*) l1->string[p1]) - my_tolower((line*) l2->string[p2] > 0)) ? 1 : -1;
-        
-        p1++;
-        p2++;
-        p1 += skip_bad_start ((line*) l1->string + p1);
-        p2 += skip_bad_start ((line*) l2->string + p2);
-
-    }
-
-    return (my_tolower((line*) l1->string[p1]) - my_tolower((line*) l2->string[p2]) > 0) ? 1 : -1;
-}
-
-int end_comparator (const line* l1, const line* l2)
-{
-    if (l1->len == 0)
-        return -1;
-    
-    if (l2->len == 0 && l1->len != 0)
-        return 1;
-    
-    size_t p1 = l1->len - 1, p2 = l2->len - 1;
-
-    p1 -= skip_bad_end (l1->string, l1->string + p1);
-    p2 -= skip_bad_end (l2->string, l2->string + p2);
+    p1 += skip_bad_start (l1->string + p1);
+    p2 += skip_bad_start (l2->string + p2);
     
     while (my_tolower(l1->string[p1]) == my_tolower(l2->string[p2]))
     {
-        if (p1 == 0 && p2 == 0)
-            return (l1->len - l2->len > 0) ? 1 : -1;
-        if ((p1 == 0 && p2 != 0) || (p1 != 0 && p2 == 0))
+        if (l1->string[p1] == '\0' || l2->string[p2] == '\0')
             return (my_tolower(l1->string[p1]) - my_tolower(l2->string[p2] > 0)) ? 1 : -1;
         
-        p1--;
-        p2--;
-        p1 -= skip_bad_end (l1->string, l1->string + p1);
-        p2 -= skip_bad_end (l2->string, l2->string + p2);
+        p1++;
+        p2++;
+        p1 += skip_bad_start (l1->string + p1);
+        p2 += skip_bad_start (l2->string + p2);
 
     }
 
     return (my_tolower(l1->string[p1]) - my_tolower(l2->string[p2]) > 0) ? 1 : -1;
+}
+
+int end_comparator (line l1, line l2)
+{
+    if (l1.len == 0)
+        return -1;
+    
+    if (l2.len == 0 && l1.len != 0)
+        return 1;
+    
+    size_t p1 = l1.len - 1, p2 = l2.len - 1;
+
+    p1 -= skip_bad_end (l1.string, l1.string + p1);
+    p2 -= skip_bad_end (l2.string, l2.string + p2);
+    
+    while (my_tolower(l1.string[p1]) == my_tolower(l2.string[p2]))
+    {
+        if (p1 == 0 && p2 == 0)
+            return (l1.len - l2.len > 0) ? 1 : -1;
+        if ((p1 == 0 && p2 != 0) || (p1 != 0 && p2 == 0))
+            return (my_tolower(l1.string[p1]) - my_tolower(l2.string[p2] > 0)) ? 1 : -1;
+        
+        p1--;
+        p2--;
+        p1 -= skip_bad_end (l1.string, l1.string + p1);
+        p2 -= skip_bad_end (l2.string, l2.string + p2);
+
+    }
+
+    return (my_tolower(l1.string[p1]) - my_tolower(l2.string[p2]) > 0) ? 1 : -1;
 }
 
 int skip_bad_end (char* begin, char* str)
@@ -213,16 +214,16 @@ int skip_bad_end (char* begin, char* str)
     return skip;
 }
 
-void bubblesort (line_array* array, int (*cmp_function) (const line* l1, const line* l2))
+void bubblesort (line_array* array, int (*cmp_function) (line l1, line l2))
 {
     int swaps = 1;
     
     while (swaps != 0)
     {
         swaps = 0;
-        for(int i = 0; i < 500; i++)
+        for(int i = 0; i < array->size; i++)
         {
-            if (cmp_function (array->arr + i, array->arr + (i + 1)) > 0)
+            if (cmp_function (array->arr[i], array->arr[i+1]) > 0)
             {
                 swap (array, i, i+1);
                 swaps++;
@@ -241,4 +242,10 @@ void swap (line_array* array, int i, int j)
 int my_tolower (char c)
 {
     return (65 <= c && c <= 90) ? c + 32 : c;
+}
+
+
+int cmp (const void* a, const void* b)
+{
+    return start_comparator ((line*) a, (line*) b);
 }
