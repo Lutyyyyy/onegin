@@ -18,25 +18,32 @@ typedef struct line_array_
 
 
 
-line_array* parse_file          (FILE* file);
+line_array* construct_line_arr  (FILE* file);
 void        destruct_line_arr   (line_array* array);
+
 int         skip_bad_start      (const char* str);
-int         start_comparator    (line l1, line l2);
+int         start_cmp           (line* l1, line* l2);
+int         start_comparator    (const void* a, const void* b);
+
 int         skip_bad_end        (char* begin, char* str);
-int         end_comparator      (line l1, line l2);
+int         end_cmp             (line* l1, line* l2);
+int         end_comparator      (const void* a, const void* b);
+
 void        bubblesort          (line_array* array, int (*cmp_function) (line l1, line l2));
+
 void        swap                (line_array* array, int i, int j);
 int         my_tolower          (char c);
-int cmp (const void* a, const void* b);
+
+
 
 
 int main()
 {
     FILE* file = fopen("hamlet.txt", "r");
 
-    line_array* array = parse_file (file);
+    line_array* array = construct_line_arr (file);
 //    bubblesort (array, start_comparator);
-    qsort (array->arr, array->size, sizeof (line), cmp);
+    qsort (array->arr, array->size, sizeof (line), end_comparator);
     for (int i = 0; i < array->size; i++)
         printf ("%s\n", array->arr[i].string);
 
@@ -65,7 +72,7 @@ int main()
     return 0;
 }
 
-line_array* parse_file (FILE* file)
+line_array* construct_line_arr (FILE* file)
 {
 //  check if could open file
  
@@ -144,6 +151,7 @@ void destruct_line_arr (line_array* array)
 }
 
 
+
 int skip_bad_start (const char* str)
 {
     int skip = 0;
@@ -153,7 +161,7 @@ int skip_bad_start (const char* str)
     return skip;
 }
 
-int start_comparator (line* l1, line* l2)
+int start_cmp (line* l1, line* l2)
 {
     size_t p1 = 0, p2 = 0;
 
@@ -169,41 +177,16 @@ int start_comparator (line* l1, line* l2)
         p2++;
         p1 += skip_bad_start (l1->string + p1);
         p2 += skip_bad_start (l2->string + p2);
-
     }
 
     return (my_tolower(l1->string[p1]) - my_tolower(l2->string[p2]) > 0) ? 1 : -1;
 }
 
-int end_comparator (line l1, line l2)
+int start_comparator (const void* a, const void* b)
 {
-    if (l1.len == 0)
-        return -1;
-    
-    if (l2.len == 0 && l1.len != 0)
-        return 1;
-    
-    size_t p1 = l1.len - 1, p2 = l2.len - 1;
-
-    p1 -= skip_bad_end (l1.string, l1.string + p1);
-    p2 -= skip_bad_end (l2.string, l2.string + p2);
-    
-    while (my_tolower(l1.string[p1]) == my_tolower(l2.string[p2]))
-    {
-        if (p1 == 0 && p2 == 0)
-            return (l1.len - l2.len > 0) ? 1 : -1;
-        if ((p1 == 0 && p2 != 0) || (p1 != 0 && p2 == 0))
-            return (my_tolower(l1.string[p1]) - my_tolower(l2.string[p2] > 0)) ? 1 : -1;
-        
-        p1--;
-        p2--;
-        p1 -= skip_bad_end (l1.string, l1.string + p1);
-        p2 -= skip_bad_end (l2.string, l2.string + p2);
-
-    }
-
-    return (my_tolower(l1.string[p1]) - my_tolower(l2.string[p2]) > 0) ? 1 : -1;
+    return start_cmp ((line*) a, (line*) b);
 }
+
 
 int skip_bad_end (char* begin, char* str)
 {
@@ -213,6 +196,42 @@ int skip_bad_end (char* begin, char* str)
 
     return skip;
 }
+
+int end_cmp (line* l1, line* l2)
+{
+    if (l1->len == 0)
+        return -1;
+    
+    if (l2->len == 0 && l1->len != 0)
+        return 1;
+    
+    size_t p1 = l1->len - 1, p2 = l2->len - 1;
+
+    p1 -= skip_bad_end (l1->string, l1->string + p1);
+    p2 -= skip_bad_end (l2->string, l2->string + p2);
+    
+    while (my_tolower(l1->string[p1]) == my_tolower(l2->string[p2]))
+    {
+        if (p1 == 0 && p2 == 0)
+            return (l1->len - l2->len > 0) ? 1 : -1;
+        if ((p1 == 0 && p2 != 0) || (p1 != 0 && p2 == 0))
+            return (my_tolower(l1->string[p1]) - my_tolower(l2->string[p2] > 0)) ? 1 : -1;
+        
+        p1--;
+        p2--;
+        p1 -= skip_bad_end (l1->string, l1->string + p1);
+        p2 -= skip_bad_end (l2->string, l2->string + p2);
+    }
+
+    return (my_tolower(l1->string[p1]) - my_tolower(l2->string[p2]) > 0) ? 1 : -1;
+}
+
+int end_comparator (const void* a, const void* b)
+{
+    return   end_cmp ((line*) a, (line*) b);
+}
+
+
 
 void bubblesort (line_array* array, int (*cmp_function) (line l1, line l2))
 {
@@ -232,6 +251,7 @@ void bubblesort (line_array* array, int (*cmp_function) (line l1, line l2))
     }
 }
 
+
 void swap (line_array* array, int i, int j)
 {
     line temp = array->arr[i];
@@ -244,8 +264,3 @@ int my_tolower (char c)
     return (65 <= c && c <= 90) ? c + 32 : c;
 }
 
-
-int cmp (const void* a, const void* b)
-{
-    return start_comparator ((line*) a, (line*) b);
-}
