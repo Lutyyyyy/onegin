@@ -22,15 +22,12 @@ line_array* construct_line_arr  (FILE* file);
 void        destruct_line_arr   (line_array* array);
 
 int         skip_bad_start      (const char* str);
-int         start_cmp           (line* l1, line* l2);
-int         start_comparator    (const void* a, const void* b);
+int         start_comparator    (const void* el1, const void* el2);
 
 int         skip_bad_end        (char* begin, char* str);
-int         end_cmp             (line* l1, line* l2);
-int         end_comparator      (const void* a, const void* b);
+int         end_comparator      (const void* el1, const void* el2);
 
 void        bubblesort          (line_array* array, int (*cmp_function) (line l1, line l2));
-
 void        swap                (line_array* array, int i, int j);
 int         my_tolower          (char c);
 
@@ -43,32 +40,14 @@ int main()
 
     line_array* array = construct_line_arr (file);
 //    bubblesort (array, start_comparator);
-    qsort (array->arr, array->size, sizeof (line), end_comparator);
+    qsort (array->arr, array->size, sizeof (line), start_cmp);
     for (int i = 0; i < array->size; i++)
         printf ("%s\n", array->arr[i].string);
 
-    destruct_line_arr (array);
-    
-    fclose(file);
 
 
-/*
-    const char* s[] = {"", ".qwertyu", "", "rf???"};
-    
-    line l1, l2;
-    l1.string = (char*) s[3];
-    l1.len = strlen(s[3]);
-
-    l2.string = (char*) s[1];
-    l2.len = strlen(s[1]);
-
-    int res = end_comparator(l1, l2);
-
-    printf ("res = %d\n", res);
-*/
-    
-
-    
+    destruct_line_arr (array);   
+    fclose(file);    
     return 0;
 }
 
@@ -161,8 +140,11 @@ int skip_bad_start (const char* str)
     return skip;
 }
 
-int start_cmp (line* l1, line* l2)
+int start_comparator (const void* el1, const void* el2)
 {
+    line* l1 = (line*) el1;
+    line* l2 = (line*) el2;
+    
     size_t p1 = 0, p2 = 0;
 
     p1 += skip_bad_start (l1->string + p1);
@@ -182,11 +164,6 @@ int start_cmp (line* l1, line* l2)
     return (my_tolower(l1->string[p1]) - my_tolower(l2->string[p2]) > 0) ? 1 : -1;
 }
 
-int start_comparator (const void* a, const void* b)
-{
-    return start_cmp ((line*) a, (line*) b);
-}
-
 
 int skip_bad_end (char* begin, char* str)
 {
@@ -197,8 +174,11 @@ int skip_bad_end (char* begin, char* str)
     return skip;
 }
 
-int end_cmp (line* l1, line* l2)
+int end_comparator (const void* el1, const void* el2)
 {
+    line* l1 = (line*) el1;
+    line* l2 = (line*) el2;
+
     if (l1->len == 0)
         return -1;
     
@@ -226,11 +206,6 @@ int end_cmp (line* l1, line* l2)
     return (my_tolower(l1->string[p1]) - my_tolower(l2->string[p2]) > 0) ? 1 : -1;
 }
 
-int end_comparator (const void* a, const void* b)
-{
-    return   end_cmp ((line*) a, (line*) b);
-}
-
 
 
 void bubblesort (line_array* array, int (*cmp_function) (line l1, line l2))
@@ -250,7 +225,6 @@ void bubblesort (line_array* array, int (*cmp_function) (line l1, line l2))
         }
     }
 }
-
 
 void swap (line_array* array, int i, int j)
 {
