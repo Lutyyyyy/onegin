@@ -1,68 +1,65 @@
 #include "onegin.h"
 
 
-line_array* construct_line_arr (FILE* file)
+char* text_to_buf (FILE* file)
 {
-//  check if could open file
     if (file == nullptr)
     {
         printf ("ERROR: *file == nullptr");
         return NULL;
     }
 
+    int sz = file_size (file);
+    char* file_start = (char*) calloc (sz + 1, sizeof(char));
+    fread (file_start, sizeof (char), sz, file);
 
-//  finding size of file 
-    fseek (file, 0L, SEEK_END); // find END 
-    long int sz = ftell (file); // bytes from START to END
-    fseek (file, 0L, SEEK_SET); // return indicator to START position
+    return file_start;
+}
 
-
-// finding number of strings to calloc 
-    char* text_of_file = (char*) calloc (sz + 1, sizeof(char));
-    long int i = 0;
-    size_t str_counter = 0;
-    while (i < sz)
-    {
-        char c = getc (file);
-        if (c == '\n') 
-        {
-            c = '\0';
-            str_counter++;
-        }
-        text_of_file[i] = c;
-        i++;
-    }
-
-    if (getc (file) == EOF)
-    {
-        text_of_file[i] = '\0';
-        str_counter++;
-    }
-
-
-//  creating array of strings
-    line_array* str_array = (line_array*) calloc (1,               sizeof (line_array));
-    line*       strings   = (line*)       calloc (str_counter, sizeof (line));
-
-    long int ptr = 0;
-    size_t j = 0;
+line_array* buf_to_line_arr (char* buf, size_t buf_size)
+{
+    size_t nLines = count_lines (buf, buf_size);
     
-    for ( ; j == 0 || j < str_counter; j++)
+    line_array* lines_array = (line_array*) calloc (1,      sizeof (line_array));
+    line*       lines       = (line*)       calloc (nLines, sizeof (line));
+
+    char* ptr = buf;
+    char* term = ptr;
+    size_t j = 0;
+
+    for ( ; j < nLines && (ptr = strchr (ptr, '\n')) != NULL; j++)
     {
-        size_t len = strlen ((char*) text_of_file + ptr);
-        char* term = (char*) calloc (len + 1, sizeof (char));
-        strings[j].string = strcpy (term, (char*) text_of_file + ptr);
-        strings[j].len = len;
+        size_t len = size_t (ptr - term);
+        *ptr = '\0';
+
+        char* string = (char*) calloc (len + 1, sizeof (char));
+        lines[j].string = strcpy (string, term);
+        lines[j].len = len;
         
-        ptr = ptr + len + 1;
+        if (ptr + 1 != NULL)
+            ptr++;
+        term = ptr;
     }
-    str_array->arr  = strings;
-    str_array->size = str_counter;
 
+    if (term != NULL)
+    {
+        size_t len = strlen (term);
+        char* string = (char*) calloc (len + 1, sizeof (char));
+        lines[j].string = strcpy (string, term);
+        lines[j].len = len;
+    }
+    
+    else 
+    {
+        char* string = (char*) calloc (1, sizeof (char));
+        lines[j].string = strcpy (string, "\0");
+        lines[j].len = 0;
+    }
+    
+    lines_array->arr  = lines;
+    lines_array->size = nLines;
 
-//  free buffer and return
-    free (text_of_file);
-    return str_array;
+    return lines_array;
 }
 
 void destruct_line_arr (line_array* array)
@@ -73,6 +70,31 @@ void destruct_line_arr (line_array* array)
     free (array->arr);
     free (array);
 }
+
+
+
+long int file_size (FILE* file)
+{
+    fseek (file, 0L, SEEK_END);  
+    long int sz = ftell (file); 
+    fseek (file, 0L, SEEK_SET);
+    return sz; 
+}
+
+size_t count_lines (char* buf, size_t buf_size)
+{
+    size_t str_counter = 0;
+    char* ptr = buf;
+    while ( (ptr = strchr (ptr, '\n')) != NULL )
+    {
+        ptr++;
+        str_counter++;
+    }
+
+    return str_counter + 1;
+}
+
+
 
 void print_title (FILE* file, const char* title)
 {

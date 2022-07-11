@@ -52,7 +52,7 @@ int end_comparator (const void* el1, const void* el2)
     if (l1->len == 0)
         return -1;
     
-    if (l2->len == 0 && l1->len != 0)
+    else if (l2->len == 0 && l1->len != 0)
         return 1;
     
     size_t p1 = l1->len - 1, p2 = l2->len - 1;
@@ -62,16 +62,15 @@ int end_comparator (const void* el1, const void* el2)
     
     while (my_tolower(l1->string[p1]) == my_tolower(l2->string[p2]))
     {
-        if (p1 == 0 && p2 == 0)
+        if (p1 == 0 || p2 == 0)
             return (l1->len - l2->len > 0) ? 1 : -1;
-        if ((p1 == 0 && p2 != 0) || (p1 != 0 && p2 == 0))
-            return (my_tolower(l1->string[p1]) - my_tolower(l2->string[p2] > 0)) ? 1 : -1;
         
         p1--;
         p2--;
+
         p1 -= skip_bad_end (l1->string, l1->string + p1);
         p2 -= skip_bad_end (l2->string, l2->string + p2);
-    }
+    } 
 
     return (my_tolower(l1->string[p1]) - my_tolower(l2->string[p2]) > 0) ? 1 : -1;
 }
@@ -125,7 +124,7 @@ void swap (void *pa, void *pb, size_t size) //spizdil s interneta
 
 void bubblesort (void* base, size_t nmemb, size_t size, int (*compar) (const void* , const void* ))
 {
-    int swaps = 1;
+    size_t swaps = 1;
     char* start = (char*) base;
     
     while (swaps != 0)
@@ -139,6 +138,7 @@ void bubblesort (void* base, size_t nmemb, size_t size, int (*compar) (const voi
                 swaps++;
             }
         }
+        printf ("%ld\n", swaps);
     }
 }
 

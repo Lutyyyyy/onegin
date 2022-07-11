@@ -21,8 +21,14 @@ typedef struct line_array_
 
 
 
-line_array* construct_line_arr  (FILE* file);
+char*       text_to_buf         (FILE* file);
+line_array* buf_to_line_arr     (char* buf, size_t buf_size);
+
 void        destruct_line_arr   (line_array* array);
+
+long int    file_size           (FILE* file);
+size_t      count_lines         (char* buf, size_t buf_size);
+
 void        print_title         (FILE* file, const char* title);
 void        print_lines_to_file (FILE* file, line_array* arr);
 
