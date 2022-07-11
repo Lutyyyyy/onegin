@@ -30,10 +30,10 @@ line_array* buf_to_line_arr (char* buf, size_t buf_size)
     for ( ; j < nLines && (ptr = strchr (ptr, '\n')) != NULL; j++)
     {
         size_t len = size_t (ptr - term);
-        *ptr = '\0';
 
         char* string = (char*) calloc (len + 1, sizeof (char));
-        lines[j].string = strcpy (string, term);
+        lines[j].string = strncpy (string, term, len);
+        lines[j].string[len] = '\0';
         lines[j].len = len;
         
         if (ptr + 1 != NULL)
