@@ -12,8 +12,8 @@ char* text_to_buf (FILE* file)
     int sz = file_size (file);
     char* file_start = (char*) calloc (sz + 1, sizeof(char));
 
-    fread (file_start, sizeof (char), sz, file);
-    file_start[sz] = '\0';
+    long int nSymbols = fread (file_start, sizeof (char), sz, file);
+    file_start[nSymbols] = '\0';
 
     return file_start;
 }
@@ -27,28 +27,24 @@ line_array* buf_to_line_arr (char* buf, size_t buf_size)
 
     char* ptr = buf;
     char* term = ptr;
-    size_t j = 0;
+    size_t str_counter = 0;
 
-    for ( ; (ptr = strchr (ptr, '\n')) != NULL; j++)
+    for ( ; (ptr = strchr (ptr, '\n')) != NULL; str_counter++)
     {
         size_t len = size_t (ptr - term);
 
-        char* string = (char*) calloc (len + 1, sizeof (char));
-        lines[j].string = strncpy (string, term, len);
-        lines[j].string[len] = '\0';
-        lines[j].len = len;
+        lines[str_counter].string = term;
+        lines[str_counter].len = len;
         
         if (ptr + 1 != NULL)
             ptr++;
         term = ptr;
     }
 
-    size_t len = strlen (term);
-    char* string = (char*) calloc (len + 1, sizeof (char));
-    lines[j].string = strcpy (string, term);
-    lines[j].len = len;
+    size_t len = buf_size - size_t (term - buf);
+    lines[str_counter].string = term;
+    lines[str_counter].len = len;
 
-    
     lines_array->arr  = lines;
     lines_array->size = nLines;
 
@@ -56,15 +52,10 @@ line_array* buf_to_line_arr (char* buf, size_t buf_size)
 }
 
 void destruct_line_arr (line_array* array)
-{
-    for (int i = 0; i < array->size; i++)
-        free (array->arr[i].string);
-    
+{  
     free (array->arr);
     free (array);
 }
-
-
 
 long int file_size (FILE* file)
 {
@@ -83,11 +74,41 @@ size_t count_lines (char* buf, size_t buf_size)
         ptr++;
         str_counter++;
     }
-    printf ("%d\n", str_counter + 1);
     return str_counter + 1;
 }
 
+line_array* copy_line_arr (line_array* array)
+{
+    line_array* lines_array = (line_array*) calloc (1,           sizeof (line_array));
+    line*       lines       = (line*)       calloc (array->size, sizeof (line));
 
+    size_t line_counter = 0;
+    while (line_counter < array->size) 
+    {
+        lines[line_counter].string = array->arr[line_counter].string;
+        lines[line_counter].len    = array->arr[line_counter].len;
+
+        line_counter++;
+    }
+
+    lines_array->arr = lines;
+    lines_array->size = array->size;
+
+    return lines_array;
+}
+
+int my_fputs (const char *s, FILE* stream)
+{
+    if (s == NULL)
+        return EOF;
+
+    size_t i = 0;
+    while (s[i] != '\n' && s[i] != '\0')
+        fputc (s[i++], stream);
+    
+    fputc ('\n', stream);
+    return i;
+}
 
 void print_title (FILE* file, const char* title)
 {
@@ -108,6 +129,6 @@ void print_title (FILE* file, const char* title)
 void print_lines_to_file (FILE* file, line_array* array)
 {
     for (int i = 0; i < array->size; i++)
-        fprintf (file, "%s\n", array->arr[i].string);
+        my_fputs(array->arr[i].string, file);
     return;
 }

@@ -76,7 +76,6 @@ int end_comparator (const void* el1, const void* el2)
 }
 
 
-
 void my_qsort (void *base, size_t nmemb, size_t size, int (*compar)(const void *, const void *))
 {
 
@@ -94,18 +93,18 @@ int partition_alg (void *base, size_t nmemb, size_t size, int (*compar)(const vo
 {
     char* start = (char*) base;
     void* pivot = start + (nmemb - 1) * size;
-    size_t i = 0, j = 0;
-    for ( ; j < nmemb - 1; j++)
+    size_t el_to_swap = 0, current_num = 0;
+    for ( ; current_num < nmemb - 1; current_num++)
     {
-        if (compar (start + j * size, pivot) <= 0)
+        if (compar (start + current_num * size, pivot) <= 0)
         {
-            swap (start + i * size, start + j * size, size);
-            i++;
+            swap (start + el_to_swap * size, start + current_num * size, size);
+            el_to_swap++;
         }
     }
 
-    swap (start + i * size, pivot, size);
-    return i;
+    swap (start + el_to_swap * size, pivot, size);
+    return el_to_swap;
 }
 
 void swap (void *pa, void *pb, size_t size) //spizdil s interneta
@@ -138,7 +137,7 @@ void bubblesort (void* base, size_t nmemb, size_t size, int (*compar) (const voi
                 swaps++;
             }
         }
-        printf ("%ld\n", swaps);
+//        printf ("%ld\n", swaps);
     }
 }
 
