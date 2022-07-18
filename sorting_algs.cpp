@@ -109,12 +109,11 @@ int partition_alg (void *base, size_t nmemb, size_t size, int (*compar)(const vo
 
 void swap (void *pa, void *pb, size_t size) //spizdil s interneta
 {
-    char tmp;
     char *a = (char*) pa;
     char *b = (char*) pb;
-    while(size--) 
+    while (size--) 
     {
-        tmp = *a;
+        char tmp = *a;
         *a++ = *b;
         *b++ = tmp;
     }
