@@ -11,7 +11,9 @@ char* text_to_buf (FILE* file)
 
     int sz = file_size (file);
     char* file_start = (char*) calloc (sz + 1, sizeof(char));
+
     fread (file_start, sizeof (char), sz, file);
+    file_start[sz] = '\0';
 
     return file_start;
 }
@@ -27,7 +29,7 @@ line_array* buf_to_line_arr (char* buf, size_t buf_size)
     char* term = ptr;
     size_t j = 0;
 
-    for ( ; j < nLines && (ptr = strchr (ptr, '\n')) != NULL; j++)
+    for ( ; (ptr = strchr (ptr, '\n')) != NULL; j++)
     {
         size_t len = size_t (ptr - term);
 
@@ -41,20 +43,11 @@ line_array* buf_to_line_arr (char* buf, size_t buf_size)
         term = ptr;
     }
 
-    if (term != NULL)
-    {
-        size_t len = strlen (term);
-        char* string = (char*) calloc (len + 1, sizeof (char));
-        lines[j].string = strcpy (string, term);
-        lines[j].len = len;
-    }
-    
-    else 
-    {
-        char* string = (char*) calloc (1, sizeof (char));
-        lines[j].string = strcpy (string, "\0");
-        lines[j].len = 0;
-    }
+    size_t len = strlen (term);
+    char* string = (char*) calloc (len + 1, sizeof (char));
+    lines[j].string = strcpy (string, term);
+    lines[j].len = len;
+
     
     lines_array->arr  = lines;
     lines_array->size = nLines;
@@ -90,7 +83,7 @@ size_t count_lines (char* buf, size_t buf_size)
         ptr++;
         str_counter++;
     }
-
+    printf ("%d\n", str_counter + 1);
     return str_counter + 1;
 }
 
